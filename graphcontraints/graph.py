@@ -44,7 +44,7 @@ def add_operation_constraints(solver, graph):
         solver.add( graph.nodes()[node]['transaction'] >= 0, graph.nodes()[node]['transaction'] <= 100 )
         solver.add( graph.nodes()[node]['buffer_id'] >= 0, graph.nodes()[node]['buffer_id'] < 10 )
         solver.add( graph.nodes()[node]['file_id'] >= 0, graph.nodes()[node]['file_id'] < 10 )
-        solver.add( graph.nodes()[node]['file2_id'] >= 0, graph.nodes()[node]['file_id'] < 10 )
+        solver.add( graph.nodes()[node]['file2_id'] >= 0, graph.nodes()[node]['file2_id'] < 10 )
 
 def add_time_constraints(solver, graph):
     for node in graph.nodes():
