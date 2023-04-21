@@ -12,8 +12,9 @@
 #define BUFFER_SIZE 100
 #define NUM_BUFFERS 10
 #define NUM_FILES 10
+#define NUM_FDESCRIPTORS 10
 
-int file_descriptor[100];
+int file_descriptor[NUM_FDESCRIPTORS];
 char* buffer[NUM_BUFFERS];
 char* file_names[NUM_FILES];
 
@@ -172,7 +173,7 @@ void execute_command(char* command) {
 }
 
 void initialize_buffers(){
-  for(int transaction = 0; transaction < 100; transaction++){
+  for(int transaction = 0; transaction < NUM_FDESCRIPTORS; transaction++){
     file_descriptor[transaction] = transaction;
   }
 
