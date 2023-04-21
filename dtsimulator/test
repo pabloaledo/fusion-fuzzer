@@ -1,8 +1,3 @@
-1000 open file1
-2000 write into file1
-3000 close file1
-4000 close file1
-5000 close file1
-6000 close file1
-7000 close file1
-8000 close file1
+1000 1 0
+2000 2 0
+3000 3 0

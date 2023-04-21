@@ -129,6 +129,8 @@ add_op_after_open(solver, G)
 add_op_before_close(solver, G)
 add_open_different_transactions(solver, G)
 
+solver.add( G.nodes()[2]["operation"] == 2 );
+
 
 # Check if the solver is satisfiable
 if solver.check() == z3.sat:
