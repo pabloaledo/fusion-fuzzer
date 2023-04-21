@@ -1,6 +1,7 @@
 import networkx as nx
 import z3 as z3
 from enum import Enum
+import random
 
 class OperationTypes(Enum):
     OPEN = 1
@@ -124,6 +125,7 @@ def generate_nodes(n):
     for x in range(0,n):
         node = {
                 "name": "node_%04d" % x,
+                "collapsed": False,
                 "time": z3.Int("time_%04d" % x),
                 "operation_type": z3.Int("operation_type_%04d" % x),
                 "operation": z3.Int("operation_%04d" % x),
@@ -134,6 +136,43 @@ def generate_nodes(n):
                 }
         ret.append(node)
     return ret
+
+def likelyhood(solver):
+    return 100
+
+def wave_function_collapse(graph, solver):
+
+    collapsed_nodes = 0
+    while collapsed_nodes < 3:
+        rand_node = random.randint(1, len(graph.nodes())-1)
+        if graph.nodes()[rand_node]['collapsed']:
+            continue
+
+        solver.push()
+        solver.check()
+        model = solver.model()
+
+        collapsed_time = model[ graph.nodes()[rand_node]["time"] ].as_long()
+        collapsed_operation_type = model[ graph.nodes()[rand_node]["operation_type"] ].as_long()
+        collapsed_operation = model[ graph.nodes()[rand_node]["operation"] ].as_long()
+        collapsed_transaction = model[ graph.nodes()[rand_node]["transaction"] ].as_long()
+        collapsed_buffer_id = model[ graph.nodes()[rand_node]["buffer_id"] ].as_long()
+        collapsed_file_id = model[ graph.nodes()[rand_node]["file_id"] ].as_long()
+        collapsed_file2_id = model[ graph.nodes()[rand_node]["file2_id"] ].as_long()
+
+        solver.add( graph.nodes()[rand_node]['time'] == collapsed_time )
+        solver.add( graph.nodes()[rand_node]['operation_type'] == collapsed_operation_type )
+        solver.add( graph.nodes()[rand_node]['operation'] == collapsed_operation )
+        solver.add( graph.nodes()[rand_node]['transaction'] == collapsed_transaction )
+        solver.add( graph.nodes()[rand_node]['buffer_id'] == collapsed_buffer_id )
+        solver.add( graph.nodes()[rand_node]['file_id'] == collapsed_file_id )
+        solver.add( graph.nodes()[rand_node]['file2_id'] == collapsed_file2_id)
+
+        if random.randint(0, 100) < likelyhood(solver):
+            collapsed_nodes = collapsed_nodes + 1
+        else:
+            solver.pop()
+
 
 # create an empty undirected graph
 G = nx.Graph()
@@ -164,7 +203,8 @@ add_op_after_open(solver, G)
 add_op_before_close(solver, G)
 add_open_different_transactions(solver, G)
 
-solver.add( G.nodes()[2]["operation_type"] == 2 );
+
+wave_function_collapse(G, solver)
 
 # Check if the solver is satisfiable
 if solver.check() == z3.sat:
