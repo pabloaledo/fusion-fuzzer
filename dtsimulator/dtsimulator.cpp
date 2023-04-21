@@ -3,6 +3,7 @@
 #include <string.h>
 #include <time.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 #define MAX_LINE_LENGTH 1024
 
@@ -24,8 +25,8 @@ void execute_command(char* command) {
         case 2:
             printf("write %d\n", transaction);
 
-            char* data = "Hello World!";
-            write(file_descriptor[transaction], data, strlen(data));
+            char data[100];
+            write(file_descriptor[transaction], data, 100);
 
             break;
 
