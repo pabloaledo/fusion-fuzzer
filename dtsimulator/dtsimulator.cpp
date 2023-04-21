@@ -207,10 +207,6 @@ int main(int argc, char* argv[]) {
             continue;
         }
         long long timestamp_ms = strtoll(timestamp_str, NULL, 10);
-        if (timestamp_ms == 0) {
-            printf("Error: invalid timestamp\n");
-            continue;
-        }
 
         time_t current_time = time(0);
         long elapsed_time = difftime(current_time, start_time) * 1000;

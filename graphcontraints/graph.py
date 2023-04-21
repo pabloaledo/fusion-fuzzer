@@ -81,7 +81,7 @@ def show_solution(model, graph):
                 time        = model[ node['time'] ].as_long()
                 operation   = model[ node['operation'] ].as_long()
                 transaction = model[ node['transaction'] ].as_long()
-                print("time: ", time, ", operation: ", operation, ", transaction: ", transaction)
+                print(time, operation, transaction)
 
 def generate_nodes(n):
     ret = list()
