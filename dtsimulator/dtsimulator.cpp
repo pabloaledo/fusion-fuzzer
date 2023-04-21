@@ -19,8 +19,8 @@ char* file_names[NUM_FILES];
 
 void execute_command(char* command) {
     printf("Executing command: %s\n", command);
-    int operation, transaction, buffer_id, name_id;
-    sscanf(command, "%d%d%d%d", &operation, &transaction, &buffer_id, &name_id);
+    int operation, transaction, buffer_id, name_id, name2_id;
+    sscanf(command, "%d%d%d%d%d", &operation, &transaction, &buffer_id, &name_id, &name2_id);
 
     switch (operation) {
         case 1:
@@ -47,15 +47,14 @@ void execute_command(char* command) {
         case 4:
             printf("delete %d\n", transaction);
 
-            remove("file.txt");
+            remove(file_names[name_id]);
 
             break;
         
         case 5:
             printf("read %d\n", transaction);
 
-            char data2[100];
-            read(file_descriptor[transaction], data2, 100);
+            read(file_descriptor[transaction], buffer[buffer_id], 100);
 
             break;
 
@@ -84,21 +83,21 @@ void execute_command(char* command) {
         case 9:
             printf("rename %d\n", transaction);
 
-            rename("file.txt", "file2.txt");
+            rename(file_names[name_id], file_names[name2_id]);
 
             break;
 
         case 10:
             printf("link %d\n", transaction);
 
-            link("file.txt", "file2.txt");
+            link(file_names[name_id], file_names[name2_id]);
 
             break;
 
         case 11:
             printf("unlink %d\n", transaction);
 
-            unlink("file2.txt");
+            unlink(file_names[name_id]);
 
             break;
 
@@ -126,14 +125,14 @@ void execute_command(char* command) {
         case 15:
             printf("chmod %d\n", transaction);
 
-            chmod("file.txt", 0777);
+            chmod(file_names[name_id], 0777);
 
             break;
 
         case 16:
             printf("chown %d\n", transaction);
 
-            chown("file.txt", 1000, 1000);
+            chown(file_names[name_id], 1000, 1000);
 
             break;
         
@@ -143,7 +142,7 @@ void execute_command(char* command) {
             struct utimbuf time;
             time.actime = 1000;
             time.modtime = 1000;
-            utime("file.txt", &time);
+            utime(file_names[name_id], &time);
 
             break;
         
@@ -151,7 +150,7 @@ void execute_command(char* command) {
             printf("stat %d\n", transaction);
 
             struct stat buf;
-            stat("file.txt", &buf);
+            stat(file_names[name_id], &buf);
 
             break;
 
@@ -159,14 +158,14 @@ void execute_command(char* command) {
             printf("lstat %d\n", transaction);
 
             struct stat buf2;
-            lstat("file.txt", &buf2);
+            lstat(file_names[name_id], &buf2);
 
             break;
 
         case 20:
             printf("access %d\n", transaction);
 
-            access("file.txt", F_OK);
+            access(file_names[name_id], F_OK);
 
             break;
         case 21:
