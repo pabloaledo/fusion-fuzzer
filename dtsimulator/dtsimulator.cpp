@@ -10,10 +10,12 @@
 
 #define MAX_LINE_LENGTH 1024
 #define BUFFER_SIZE 100
+#define NUM_BUFFERS 10
+#define NUM_FILES 10
 
 int file_descriptor[100];
-char* buffer[10];
-char* file_names[10];
+char* buffer[NUM_BUFFERS];
+char* file_names[NUM_FILES];
 
 void execute_command(char* command) {
     printf("Executing command: %s\n", command);
@@ -190,14 +192,14 @@ void initialize_buffers(){
     file_descriptor[transaction] = transaction;
   }
 
-  for(int buffer_id = 0; buffer_id < 10; buffer_id++){
+  for(int buffer_id = 0; buffer_id < NUM_BUFFERS; buffer_id++){
     buffer[buffer_id] = (char*)malloc(BUFFER_SIZE);
     for(int offset = 0; offset < BUFFER_SIZE; offset++){
       buffer[buffer_id][offset] = rand();
     }
   }
 
-  for( int n = 0; n < 10; n++ ){
+  for( int n = 0; n < NUM_FILES; n++ ){
     file_names[n] = (char*) malloc(10);
     sprintf(file_names[n], "file_%d", n);
   }
@@ -246,7 +248,7 @@ int main(int argc, char* argv[]) {
     fclose(input_file);
 
     int filebuffers = open("buffers", O_RDWR | O_CREAT, 0666);
-    for(int buffer_id = 0; buffer_id < 10; buffer_id++){
+    for(int buffer_id = 0; buffer_id < NUM_BUFFERS; buffer_id++){
       write(filebuffers, buffer[buffer_id], BUFFER_SIZE);
     }
     close(filebuffers);
