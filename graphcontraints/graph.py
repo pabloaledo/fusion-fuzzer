@@ -39,8 +39,8 @@ def add_if_op_then_open(solver, graph):
             nodesn = othernodes - {node2}
             andcondition = True
             andcondition = z3.And( andcondition, z3.And(graph.nodes()[nodep]['operation'] == Operations.OPEN.value, graph.nodes()[nodep]['transaction'] == graph.nodes()[node1]['transaction']) )
-            for node3 in nodesn:
-                andcondition = z3.And(andcondition, z3.Or(graph.nodes()[node3]['operation'] != Operations.OPEN.value, z3.And(graph.nodes()[node3]['operation'] == Operations.OPEN.value, graph.nodes()[node3]['transaction'] != graph.nodes()[node1]['transaction']) ) )
+            # for node3 in nodesn:
+                # andcondition = z3.And(andcondition, z3.Or(graph.nodes()[node3]['operation'] != Operations.OPEN.value, z3.And(graph.nodes()[node3]['operation'] == Operations.OPEN.value, graph.nodes()[node3]['transaction'] != graph.nodes()[node1]['transaction']) ) )
             orcondition = z3.Or(orcondition, andcondition)
 
         solver.add( z3.Implies( graph.nodes()[node1]['operation'] == Operations.WRITE.value, orcondition ) )
