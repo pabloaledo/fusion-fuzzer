@@ -113,12 +113,12 @@ def show_solution(model, graph):
             if model[ graph.nodes()[node]["time"] ].as_long() == t :
                 node = graph.nodes()[node]
                 time        = model[ node['time'] ].as_long()
-                operation_type   = model[ node['operation_type'] ].as_long()
+                operation   = model[ node['operation'] ].as_long()
                 transaction = model[ node['transaction'] ].as_long()
                 buffer_id = model[ node['buffer_id'] ].as_long()
                 file_id = model[ node['file_id'] ].as_long()
                 file2_id = model[ node['file2_id'] ].as_long()
-                print(time, operation_type, transaction, buffer_id, file_id, file2_id)
+                print(time, operation, transaction, buffer_id, file_id, file2_id)
 
 def generate_nodes(n):
     ret = list()
@@ -203,6 +203,9 @@ add_op_after_open(solver, G)
 add_op_before_close(solver, G)
 add_open_different_transactions(solver, G)
 
+solver.add( G.nodes()[1]['operation_type'] == OperationTypes.OPEN.value )
+solver.add( G.nodes()[2]['operation_type'] == OperationTypes.BOUNDED.value )
+solver.add( G.nodes()[3]['operation_type'] == OperationTypes.CLOSE.value )
 
 wave_function_collapse(G, solver)
 
