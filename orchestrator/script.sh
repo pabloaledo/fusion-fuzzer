@@ -12,6 +12,6 @@ rm -fr ~/workspace/fusionfs/tests/random_test
 cp -r test ~/workspace/fusionfs/tests/random_test
 (cd ~/workspace/fusionfs/tests; ./run_tests.sh --store=s3 --bucket=fusionfs-ci random_test)
 (cd ~/workspace/fusionfs/tests/random_test/external_docker_folder; md5sum $(ls * | grep -v fake) > md5s)
-#md5sum ~/workspace/fusionfs/tests/random_test/{local/md5s,external_docker_folder/md5s}
+md5sum ~/workspace/fusionfs/tests/random_test/{local/md5s,external_docker_folder/md5s}
 #meld ~/workspace/fusionfs/tests/random_test/{local/md5s,external_docker_folder/md5s}
 #meld ~/workspace/fusionfs/tests/random_test/{local/list,external_docker_folder/list}
