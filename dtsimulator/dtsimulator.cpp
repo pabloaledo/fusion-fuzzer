@@ -31,54 +31,54 @@ void execute_command(char* command) {
             break;
         
         case 2:
-            printf("write %d\n", transaction);
-
-            write(file_descriptor[transaction], buffer[buffer_id], 100);
-
-            break;
-
-        case 3:
             printf("close %d\n", transaction);
 
             close(file_descriptor[transaction]);
 
             break;
 
-        case 4:
-            printf("delete %d\n", transaction);
+        case 3:
+            printf("write %d\n", transaction);
 
-            remove(file_names[name_id]);
+            write(file_descriptor[transaction], buffer[buffer_id], 100);
 
             break;
-        
-        case 5:
+
+        case 4:
             printf("read %d\n", transaction);
 
             read(file_descriptor[transaction], buffer[buffer_id], 100);
 
             break;
 
-        case 6:
+        case 5:
             printf("seek %d\n", transaction);
 
             lseek(file_descriptor[transaction], 0, SEEK_SET);
 
             break;
         
-        case 7:
+        case 6:
             printf("truncate %d\n", transaction);
 
             ftruncate(file_descriptor[transaction], 0);
 
             break;
         
-        case 8:
+        case 7:
             printf("sync %d\n", transaction);
 
             fsync(file_descriptor[transaction]);
 
             break;
 
+        case 8:
+            printf("delete %d\n", transaction);
+
+            remove(file_names[name_id]);
+
+            break;
+        
 
         case 9:
             printf("rename %d\n", transaction);
@@ -168,21 +168,6 @@ void execute_command(char* command) {
             access(file_names[name_id], F_OK);
 
             break;
-        case 21:
-            printf("dup %d\n", transaction);
-
-            dup(file_descriptor[transaction]);
-
-            break;
-
-        case 22:
-            printf("dup2 %d\n", transaction);
-
-            dup2(file_descriptor[transaction], 0);
-
-            break;
-
-
     }
 }
 

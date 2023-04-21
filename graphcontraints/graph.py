@@ -10,34 +10,32 @@ class OperationTypes(Enum):
 
 class Operations(Enum):
     OPEN = 1
-    CLOSE = 3
-    WRITE = 4
-    READ = 5
-    SEEK = 6
-    TRUNCATE = 7
-    UNLINK = 8
+    CLOSE = 2
+    WRITE = 3
+    READ = 4
+    SEEK = 5
+    TRUNCATE = 6
+    SYNC = 7
+    DELETE = 8
     RENAME = 9
-    MKDIR = 10
-    RMDIR = 11
-    SYMLINK = 12
-    LINK = 13
-    CHMOD = 14
-    CHOWN = 15
-    UTIMENS = 16
-    CREATE = 17
-    RELEASE = 18
-    FSYNC = 19
-    SETXATTR = 20
-    GETXATTR = 21
-    LISTXATTR = 22
-    REMOVEXATTR = 23
-    OPENDIR = 24
+    LINK = 10
+    UNLINK = 11
+    MKDIR = 12
+    RMDIR = 13
+    CHDIR = 14
+    CHMOD = 15
+    CHOWN = 16
+    UTIME = 17
+    STAT = 18
+    LSTAT = 19
+    ACCESS = 20
 
 def add_operations_from_types(solver, graph):
     for node in graph.nodes():
         solver.add( z3.Implies( graph.nodes()[node]['operation_type'] == OperationTypes.OPEN.value, graph.nodes()[node]['operation'] == Operations.OPEN.value ) )
         solver.add( z3.Implies( graph.nodes()[node]['operation_type'] == OperationTypes.CLOSE.value, graph.nodes()[node]['operation'] == Operations.CLOSE.value ) )
-        solver.add( z3.Implies( graph.nodes()[node]['operation_type'] == OperationTypes.BOUNDED.value, z3.And(graph.nodes()[node]['operation'] >= Operations.WRITE.value, graph.nodes()[node]['operation'] <= Operations.WRITE.value ) ) )
+        solver.add( z3.Implies( graph.nodes()[node]['operation_type'] == OperationTypes.BOUNDED.value, z3.And(graph.nodes()[node]['operation'] >= Operations.WRITE.value, graph.nodes()[node]['operation'] <= Operations.SYNC.value ) ) )
+        solver.add( z3.Implies( graph.nodes()[node]['operation_type'] == OperationTypes.UNBOUNDED.value, z3.And(graph.nodes()[node]['operation'] >= Operations.DELETE.value, graph.nodes()[node]['operation'] <= Operations.ACCESS.value ) ) )
 
 def add_operation_constraints(solver, graph):
     for node in graph.nodes():
