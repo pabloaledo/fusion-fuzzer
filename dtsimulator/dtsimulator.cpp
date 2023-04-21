@@ -12,17 +12,18 @@
 
 int file_descriptor[100];
 char* buffer[10];
+char* file_names[10];
 
 void execute_command(char* command) {
     printf("Executing command: %s\n", command);
-    int operation, transaction, buffer_id;
-    sscanf(command, "%d%d%d", &operation, &transaction, &buffer_id);
+    int operation, transaction, buffer_id, name_id;
+    sscanf(command, "%d%d%d%d", &operation, &transaction, &buffer_id, &name_id);
 
     switch (operation) {
         case 1:
             printf("open %d\n", transaction);
 
-            file_descriptor[transaction] = open("file.txt", O_RDWR | O_CREAT, 0666);
+            file_descriptor[transaction] = open(file_names[name_id], O_RDWR | O_CREAT, 0666);
 
             break;
         
@@ -193,6 +194,11 @@ void initialize_buffers(){
     for(int offset = 0; offset < 20*1024*1024; offset++){
       buffer[buffer_id][offset] = rand();
     }
+  }
+
+  for( int n = 0; n < 10; n++ ){
+    file_names[n] = (char*) malloc(10);
+    sprintf(file_names[n], "file_%d", n);
   }
 
 }

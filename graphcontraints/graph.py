@@ -44,6 +44,7 @@ def add_operation_constraints(solver, graph):
         solver.add( graph.nodes()[node]['operation_type'] >= OperationTypes.OPEN.value, graph.nodes()[node]['operation_type'] <= OperationTypes.CLOSE.value )
         solver.add( graph.nodes()[node]['transaction'] >= 0, graph.nodes()[node]['transaction'] <= 100 )
         solver.add( graph.nodes()[node]['buffer_id'] >= 0, graph.nodes()[node]['buffer_id'] < 10 )
+        solver.add( graph.nodes()[node]['file_id'] >= 0, graph.nodes()[node]['file_id'] < 10 )
 
 def add_time_constraints(solver, graph):
     for node in graph.nodes():
@@ -115,7 +116,8 @@ def show_solution(model, graph):
                 operation_type   = model[ node['operation_type'] ].as_long()
                 transaction = model[ node['transaction'] ].as_long()
                 buffer_id = model[ node['buffer_id'] ].as_long()
-                print(time, operation_type, transaction, buffer_id)
+                file_id = model[ node['buffer_id'] ].as_long()
+                print(time, operation_type, transaction, buffer_id, file_id)
 
 def generate_nodes(n):
     ret = list()
@@ -126,7 +128,8 @@ def generate_nodes(n):
                 "operation_type": z3.Int("operation_type_%04d" % x),
                 "operation": z3.Int("operation_%04d" % x),
                 "transaction": z3.Int("transaction_%04d" % x),
-                "buffer_id": z3.Int("buffer_id_%04d" % x)
+                "buffer_id": z3.Int("buffer_id_%04d" % x),
+                "file_id": z3.Int("file_id_%04d" % x)
                 }
         ret.append(node)
     return ret
