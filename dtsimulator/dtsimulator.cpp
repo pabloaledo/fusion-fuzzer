@@ -11,11 +11,12 @@
 #define MAX_LINE_LENGTH 1024
 
 int file_descriptor[100];
+char* buffer[10];
 
 void execute_command(char* command) {
     printf("Executing command: %s\n", command);
-    int operation, transaction;
-    sscanf(command, "%d%d", &operation, &transaction);
+    int operation, transaction, buffer_id;
+    sscanf(command, "%d%d%d", &operation, &transaction, &buffer_id);
 
     switch (operation) {
         case 1:
@@ -28,8 +29,7 @@ void execute_command(char* command) {
         case 2:
             printf("write %d\n", transaction);
 
-            char data[100];
-            write(file_descriptor[transaction], data, 100);
+            write(file_descriptor[transaction], buffer[buffer_id], 100);
 
             break;
 
@@ -183,7 +183,24 @@ void execute_command(char* command) {
     }
 }
 
+void initialize_buffers(){
+  for(int transaction = 0; transaction < 100; transaction++){
+    file_descriptor[transaction] = transaction;
+  }
+
+  for(int buffer_id = 0; buffer_id < 10; buffer_id++){
+    buffer[buffer_id] = (char*)malloc(20*1024*1024);
+    for(int offset = 0; offset < 20*1024*1024; offset++){
+      buffer[buffer_id][offset] = rand();
+    }
+  }
+
+}
+
 int main(int argc, char* argv[]) {
+
+    initialize_buffers();
+
     if (argc != 2) {
         printf("Usage: %s input_file\n", argv[0]);
         return 1;
