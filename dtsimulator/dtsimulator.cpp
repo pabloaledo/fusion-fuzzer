@@ -9,6 +9,7 @@
 #include <utime.h>
 
 #define MAX_LINE_LENGTH 1024
+#define BUFFER_SIZE 100
 
 int file_descriptor[100];
 char* buffer[10];
@@ -190,8 +191,8 @@ void initialize_buffers(){
   }
 
   for(int buffer_id = 0; buffer_id < 10; buffer_id++){
-    buffer[buffer_id] = (char*)malloc(20*1024*1024);
-    for(int offset = 0; offset < 20*1024*1024; offset++){
+    buffer[buffer_id] = (char*)malloc(BUFFER_SIZE);
+    for(int offset = 0; offset < BUFFER_SIZE; offset++){
       buffer[buffer_id][offset] = rand();
     }
   }
@@ -243,5 +244,12 @@ int main(int argc, char* argv[]) {
     }
 
     fclose(input_file);
+
+    int filebuffers = open("buffers", O_RDWR | O_CREAT, 0666);
+    for(int buffer_id = 0; buffer_id < 10; buffer_id++){
+      write(filebuffers, buffer[buffer_id], BUFFER_SIZE);
+    }
+    close(filebuffers);
+
     return 0;
 }
