@@ -22,7 +22,9 @@ int main(int argc, char* argv[]) {
     }
 
     char line[MAX_LINE_LENGTH];
-    clock_t start_time = clock();
+
+    time_t start_time = time(0);
+
     while (fgets(line, MAX_LINE_LENGTH, input_file) != NULL) {
         char* timestamp_str = strtok(line, " ");
         char* command = strtok(NULL, "\n");
@@ -35,11 +37,13 @@ int main(int argc, char* argv[]) {
             printf("Error: invalid timestamp\n");
             continue;
         }
-        long long timestamp = timestamp_ms - (start_time * 1000 / CLOCKS_PER_SEC);
-        clock_t current_time = clock();
-        long long ms_to_wait = timestamp - (current_time * 1000 / CLOCKS_PER_SEC);
+
+        time_t current_time = time(0);
+        long elapsed_time = difftime(current_time, start_time) * 1000;
+        long ms_to_wait = timestamp_ms - elapsed_time;
+
         if (ms_to_wait > 0) {
-            printf("Waiting for %lld milliseconds...\n", ms_to_wait);
+            printf("Waiting for %ld milliseconds...\n", ms_to_wait);
             usleep((unsigned int)(ms_to_wait * 1000));
         }
         execute_command(command);
