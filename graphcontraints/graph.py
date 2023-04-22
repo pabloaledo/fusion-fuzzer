@@ -137,7 +137,7 @@ def generate_nodes(n):
         ret.append(node)
     return ret
 
-def likelyhood(solver):
+def likelyhood(model, graph, node):
     return 100
 
 def wave_function_collapse(graph, solver):
@@ -149,29 +149,42 @@ def wave_function_collapse(graph, solver):
             continue
 
         solver.push()
-        solver.check()
-        model = solver.model()
+        likely = False
 
-        collapsed_time = model[ graph.nodes()[rand_node]["time"] ].as_long()
-        collapsed_operation_type = model[ graph.nodes()[rand_node]["operation_type"] ].as_long()
-        collapsed_operation = model[ graph.nodes()[rand_node]["operation"] ].as_long()
-        collapsed_transaction = model[ graph.nodes()[rand_node]["transaction"] ].as_long()
-        collapsed_buffer_id = model[ graph.nodes()[rand_node]["buffer_id"] ].as_long()
-        collapsed_file_id = model[ graph.nodes()[rand_node]["file_id"] ].as_long()
-        collapsed_file2_id = model[ graph.nodes()[rand_node]["file2_id"] ].as_long()
+        while not likely:
+            solver.check()
+            model = solver.model()
 
-        solver.add( graph.nodes()[rand_node]['time'] == collapsed_time )
-        solver.add( graph.nodes()[rand_node]['operation_type'] == collapsed_operation_type )
-        solver.add( graph.nodes()[rand_node]['operation'] == collapsed_operation )
-        solver.add( graph.nodes()[rand_node]['transaction'] == collapsed_transaction )
-        solver.add( graph.nodes()[rand_node]['buffer_id'] == collapsed_buffer_id )
-        solver.add( graph.nodes()[rand_node]['file_id'] == collapsed_file_id )
-        solver.add( graph.nodes()[rand_node]['file2_id'] == collapsed_file2_id)
+            collapsed_time = model[ graph.nodes()[rand_node]["time"] ].as_long()
+            collapsed_operation_type = model[ graph.nodes()[rand_node]["operation_type"] ].as_long()
+            collapsed_operation = model[ graph.nodes()[rand_node]["operation"] ].as_long()
+            collapsed_transaction = model[ graph.nodes()[rand_node]["transaction"] ].as_long()
+            collapsed_buffer_id = model[ graph.nodes()[rand_node]["buffer_id"] ].as_long()
+            collapsed_file_id = model[ graph.nodes()[rand_node]["file_id"] ].as_long()
+            collapsed_file2_id = model[ graph.nodes()[rand_node]["file2_id"] ].as_long()
 
-        if random.randint(0, 100) < likelyhood(solver):
-            collapsed_nodes = collapsed_nodes + 1
-        else:
+            andexpr = z3.And(
+                    graph.nodes()[rand_node]['time'] == collapsed_time, 
+                    graph.nodes()[rand_node]['operation_type'] == collapsed_operation_type, 
+                    graph.nodes()[rand_node]['operation'] == collapsed_operation, 
+                    graph.nodes()[rand_node]['transaction'] == collapsed_transaction, 
+                    graph.nodes()[rand_node]['buffer_id'] == collapsed_buffer_id,
+                    graph.nodes()[rand_node]['file_id'] == collapsed_file_id,
+                    graph.nodes()[rand_node]['file2_id'] == collapsed_file2_id
+            )
+
+            solver.push()
+            solver.check()
+            likely = random.randint(0, 100) < likelyhood(model, graph, rand_node)
             solver.pop()
+
+            if likely:
+                collapsed_nodes = collapsed_nodes + 1
+                solver.pop()
+                solver.add( andexpr )
+            else:
+                solver.add( z3.Not(andexpr) )
+
 
 
 # create an empty undirected graph
