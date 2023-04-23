@@ -169,7 +169,9 @@ def getandcollapse(graph, solver, rand_node):
 
     solver.check()
     andexpr = z3.And(
-            graph.nodes()[rand_node]['operation'] == random.randint(1,19)
+            graph.nodes()[rand_node]['operation'] == random.randint(1,20),
+            graph.nodes()[rand_node]['file_id'] == random.randint(0,9),
+            graph.nodes()[rand_node]['file2_id'] == random.randint(0,9)
     )
     solver.add(andexpr)
     solver.check()
