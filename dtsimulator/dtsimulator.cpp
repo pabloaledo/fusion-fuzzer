@@ -7,9 +7,6 @@
 
 #include <sys/stat.h>
 #include <utime.h>
-#include <map>
-#include <set>
-#include <string>
 
 #define MAX_LINE_LENGTH 1024
 #define BUFFER_SIZE 100
@@ -20,8 +17,6 @@
 int file_descriptor[NUM_FDESCRIPTORS];
 char* buffer[NUM_BUFFERS];
 char* file_names[NUM_FILES];
-std::set<std::string> opened_files;
-std::set<int> disabled_fds;
 
 void execute_command(char* command) {
     printf("Executing command: %s\n", command);
@@ -34,12 +29,6 @@ void execute_command(char* command) {
 
             file_descriptor[transaction] = open(file_names[name_id], O_RDWR | O_CREAT, 0666);
 
-            if( opened_files.find(file_names[name_id]) == opened_files.end() ){
-                opened_files.insert(file_names[name_id]);
-            }else{
-                disabled_fds.insert(file_descriptor[transaction]);
-            }
-
             break;
         
         case 2:
@@ -47,15 +36,10 @@ void execute_command(char* command) {
 
             close(file_descriptor[transaction]);
 
-            opened_files.erase(file_names[name_id]);
-
             break;
 
         case 3:
             printf("write %d\n", transaction);
-
-            if (disabled_fds.find(file_descriptor[transaction]) != disabled_fds.end())
-                break;
 
             write(file_descriptor[transaction], buffer[buffer_id], 100);
 
@@ -64,18 +48,12 @@ void execute_command(char* command) {
         case 4:
             printf("read %d\n", transaction);
 
-            if (disabled_fds.find(file_descriptor[transaction]) != disabled_fds.end())
-                break;
-
             read(file_descriptor[transaction], buffer[buffer_id], 100);
 
             break;
 
         case 5:
             printf("seek %d\n", transaction);
-
-            if (disabled_fds.find(file_descriptor[transaction]) != disabled_fds.end())
-                break;
 
             lseek(file_descriptor[transaction], 0, SEEK_SET);
 
@@ -84,18 +62,12 @@ void execute_command(char* command) {
         case 6:
             printf("truncate %d\n", transaction);
 
-            if (disabled_fds.find(file_descriptor[transaction]) != disabled_fds.end())
-                break;
-
             ftruncate(file_descriptor[transaction], 0);
 
             break;
         
         case 7:
             printf("sync %d\n", transaction);
-
-            if (disabled_fds.find(file_descriptor[transaction]) != disabled_fds.end())
-                break;
 
             fsync(file_descriptor[transaction]);
 

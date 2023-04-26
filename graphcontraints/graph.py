@@ -125,6 +125,37 @@ def add_op_before_close(solver, graph):
         for node2 in othernodes:
             solver.add( z3.Implies( z3.And( graph.nodes()[node1]['operation_type'] == OperationTypes.BOUNDED.value, graph.nodes()[node2]['operation_type'] == OperationTypes.CLOSE.value, graph.nodes()[node1]['transaction'] == graph.nodes()[node2]['transaction'] ) , graph.nodes()[node1]['time'] < graph.nodes()[node2]['time'] ) )
 
+def add_no_double_fds(solver, graph):
+    for node1 in graph.nodes():
+        my_optype = solver.model()[ graph.nodes()[node1]["operation_type"] ].as_long()
+        if my_optype != OperationTypes.OPEN.value:
+            continue
+
+        my_transaction = solver.model()[ graph.nodes()[node1]["transaction"] ].as_long()
+
+        othernodes = set(graph.adj[node1])
+
+        open_time = solver.model()[ graph.nodes()[node1]["time"] ].as_long()
+        close_time = -1
+        for node2 in othernodes:
+            other_optype = solver.model()[ graph.nodes()[node2]["operation_type"] ].as_long()
+            other_transaction = solver.model()[ graph.nodes()[node2]["transaction"] ].as_long()
+            if other_optype == OperationTypes.CLOSE.value and other_transaction == my_transaction:
+                close_time = solver.model()[ graph.nodes()[node2]["transaction"] ].as_long()
+                break
+
+
+        for node2 in othernodes:
+            other_optype = solver.model()[ graph.nodes()[node2]["operation_type"] ].as_long()
+            if other_optype != OperationTypes.OPEN.value:
+                continue
+
+            other_open_time = solver.model()[ graph.nodes()[node2]["time"] ].as_long()
+
+            if other_open_time >= open_time and other_open_time <= close_time:
+                solver.add( graph.nodes()[node1]['file_id'] != graph.nodes()[node2]['file_id'] )
+
+
 def show_solution(model, graph):
     times = set()
     for node in graph.nodes():
@@ -164,7 +195,7 @@ def likelyhood(model, graph, node):
 
 
 
-def getandcollapse(graph, solver, rand_node):
+def getandcollapse_step1(graph, solver, rand_node):
     solver.push()
 
     solver.check()
@@ -179,8 +210,32 @@ def getandcollapse(graph, solver, rand_node):
     andexpr = z3.And(
             graph.nodes()[rand_node]['time'] == solver.model()[ graph.nodes()[rand_node]["time"] ].as_long(), 
             graph.nodes()[rand_node]['operation_type'] == solver.model()[ graph.nodes()[rand_node]["operation_type"] ].as_long(), 
-            graph.nodes()[rand_node]['operation'] == solver.model()[ graph.nodes()[rand_node]["operation"] ].as_long(), 
             graph.nodes()[rand_node]['transaction'] == solver.model()[ graph.nodes()[rand_node]["transaction"] ].as_long(), 
+            # graph.nodes()[rand_node]['operation'] == solver.model()[ graph.nodes()[rand_node]["operation"] ].as_long(), 
+            # graph.nodes()[rand_node]['buffer_id'] == solver.model()[ graph.nodes()[rand_node]["buffer_id"] ].as_long(),
+            # graph.nodes()[rand_node]['file_id'] == solver.model()[ graph.nodes()[rand_node]["file_id"] ].as_long(),
+            # graph.nodes()[rand_node]['file2_id'] == solver.model()[ graph.nodes()[rand_node]["file2_id"] ].as_long()
+    )
+
+    solver.pop()
+    return andexpr
+
+def getandcollapse_step2(graph, solver, rand_node):
+    solver.push()
+
+    solver.check()
+    andexpr = z3.And(
+            graph.nodes()[rand_node]['file_id'] == random.randint(0,9),
+            graph.nodes()[rand_node]['file2_id'] == random.randint(0,9)
+    )
+    solver.add(andexpr)
+    solver.check()
+
+    andexpr = z3.And(
+            graph.nodes()[rand_node]['time'] == solver.model()[ graph.nodes()[rand_node]["time"] ].as_long(), 
+            graph.nodes()[rand_node]['operation_type'] == solver.model()[ graph.nodes()[rand_node]["operation_type"] ].as_long(), 
+            graph.nodes()[rand_node]['transaction'] == solver.model()[ graph.nodes()[rand_node]["transaction"] ].as_long(), 
+            graph.nodes()[rand_node]['operation'] == solver.model()[ graph.nodes()[rand_node]["operation"] ].as_long(), 
             graph.nodes()[rand_node]['buffer_id'] == solver.model()[ graph.nodes()[rand_node]["buffer_id"] ].as_long(),
             graph.nodes()[rand_node]['file_id'] == solver.model()[ graph.nodes()[rand_node]["file_id"] ].as_long(),
             graph.nodes()[rand_node]['file2_id'] == solver.model()[ graph.nodes()[rand_node]["file2_id"] ].as_long()
@@ -189,7 +244,7 @@ def getandcollapse(graph, solver, rand_node):
     solver.pop()
     return andexpr
 
-def wave_function_collapse(graph, solver):
+def wave_function_collapse_step1(graph, solver):
 
     collapsed_nodes = 0
     while collapsed_nodes < 3:
@@ -199,7 +254,7 @@ def wave_function_collapse(graph, solver):
 
         likely = False
         while not likely:
-            andexpr = getandcollapse(graph, solver, rand_node)
+            andexpr = getandcollapse_step1(graph, solver, rand_node)
 
             solver.push()
             solver.add( andexpr )
@@ -212,6 +267,37 @@ def wave_function_collapse(graph, solver):
                 collapsed_nodes = collapsed_nodes + 1
             else:
                 solver.pop()
+
+def wave_function_collapse_step2(graph, solver):
+
+    collapsed_nodes = 0
+    while collapsed_nodes < 3:
+        rand_node = random.randint(1, len(graph.nodes()))
+        if graph.nodes()[rand_node]['collapsed']:
+            continue
+
+        likely = False
+        while not likely:
+            andexpr = getandcollapse_step2(graph, solver, rand_node)
+
+            solver.push()
+            solver.add( andexpr )
+            solver.check()
+
+            likely = random.randint(0, 100) < likelyhood(solver.model(), graph, rand_node)
+
+            if likely:
+                graph.nodes()[rand_node]['collapsed'] = True
+                collapsed_nodes = collapsed_nodes + 1
+            else:
+                solver.pop()
+
+def collapse_optype_time_and_transaction(graph, solver):
+    for node in graph.nodes():
+        solver.add( graph.nodes()[node]['operation_type'] == solver.model()[ graph.nodes()[node]["operation_type"] ].as_long() )
+        solver.add( graph.nodes()[node]['time'] == solver.model()[ graph.nodes()[node]["time"] ].as_long() )
+        solver.add( graph.nodes()[node]['transaction'] == solver.model()[ graph.nodes()[node]["transaction"] ].as_long() )
+
 
 
 #random.seed(100)
@@ -247,11 +333,12 @@ add_op_after_open(solver, G)
 add_op_before_close(solver, G)
 add_open_different_transactions(solver, G)
 
-#solver.add( G.nodes()[1]['operation_type'] == OperationTypes.OPEN.value )
-#solver.add( G.nodes()[2]['operation_type'] == OperationTypes.BOUNDED.value )
-#solver.add( G.nodes()[3]['operation_type'] == OperationTypes.CLOSE.value )
+wave_function_collapse_step1(G, solver)
+collapse_optype_time_and_transaction(G, solver)
 
-wave_function_collapse(G, solver)
+add_no_double_fds(solver, G)
+
+wave_function_collapse_step2(G, solver)
 
 # Check if the solver is satisfiable
 if solver.check() == z3.sat:
