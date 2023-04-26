@@ -4,9 +4,9 @@ mkdir -p test/{local,bin}
 ( cd test;  python ../../graphcontraints/graph.py > test.pattern )
 ( cd test/local;  ../../../dtsimulator/dtsimulator ../init.pattern )
 ( cd test/local;  ../../../dtsimulator/dtsimulator ../test.pattern )
-( cd test/local; ls -l | grep -v list | awk '{$1=""; $2=""; $3=""; $4=""; $6=""; $7=""; $8=""; print}' > list )
+( cd test/local; ls -l | grep -v list | grep -v md5s | awk '{$1=""; $2=""; $3=""; $4=""; $6=""; $7=""; $8=""; print}' > list )
 ( cd test/local; md5sum * | grep -v md5s > md5s )
-cp ../dtsimulator/dtsimulator test/bin
+\cp ../dtsimulator/dtsimulator test/bin
 echo "/test/bin/dtsimulator /test/test.pattern"                                                                >  test/test.sh
 echo "ls -l | grep -v list | grep -v fake | awk '{\$1=\"\"; \$2=\"\"; \$3=\"\"; \$4=\"\"; \$6=\"\"; \$7=\"\"; \$8=\"\"; print}' > list" >> test/test.sh
 echo "FROM ubuntu:22.04" > test/Dockerfile
