@@ -105,7 +105,7 @@ void execute_command(char* command) {
         case 12:
             printf("mkdir %d\n", transaction);
 
-            mkdir("dir", 0777);
+            // mkdir("dir", 0777);
 
             break;
 
