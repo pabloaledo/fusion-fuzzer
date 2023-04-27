@@ -49,7 +49,7 @@ def add_operation_constraints(solver, graph):
     for node in graph.nodes():
         solver.add( graph.nodes()[node]['operation_type'] >= OperationTypes.OPEN.value, graph.nodes()[node]['operation_type'] <= OperationTypes.UNBOUNDED.value )
         solver.add( graph.nodes()[node]['operation'] >= Operations.OPEN.value, graph.nodes()[node]['operation'] <= Operations.ACCESS.value )
-        solver.add( graph.nodes()[node]['transaction'] >= 0, graph.nodes()[node]['transaction'] <= 100 )
+        solver.add( graph.nodes()[node]['transaction'] >= -1, graph.nodes()[node]['transaction'] <= 100 )
         solver.add( graph.nodes()[node]['buffer_id'] >= 0, graph.nodes()[node]['buffer_id'] < 10 )
         solver.add( graph.nodes()[node]['file_id'] >= 0, graph.nodes()[node]['file_id'] < 10 )
         solver.add( graph.nodes()[node]['file2_id'] >= 0, graph.nodes()[node]['file2_id'] < 10 )
@@ -112,6 +112,10 @@ def add_open_different_transactions(solver, graph):
         othernodes = set(graph.adj[node1])
         for node2 in othernodes:
             solver.add( z3.Implies( z3.And( graph.nodes()[node1]['operation_type'] == OperationTypes.OPEN.value, graph.nodes()[node2]['operation_type'] == OperationTypes.OPEN.value ) , graph.nodes()[node1]['transaction'] != graph.nodes()[node2]['transaction'] ) )
+
+def add_unbounded_no_transaction(solver, graph):
+    for node1 in graph.nodes():
+        solver.add( z3.Implies( graph.nodes()[node1]['operation_type'] == OperationTypes.UNBOUNDED.value, graph.nodes()[node1]['transaction'] == -1 ) )
 
 def add_op_after_open(solver, graph):
     for node1 in graph.nodes():
@@ -332,6 +336,7 @@ add_close_after_open(solver, G)
 add_op_after_open(solver, G)
 add_op_before_close(solver, G)
 add_open_different_transactions(solver, G)
+add_unbounded_no_transaction(solver, G)
 
 wave_function_collapse_step1(G, solver)
 collapse_optype_time_and_transaction(G, solver)
