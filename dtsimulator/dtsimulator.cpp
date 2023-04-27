@@ -62,7 +62,7 @@ void execute_command(char* command) {
         case 6:
             printf("truncate %d\n", transaction);
 
-            ftruncate(file_descriptor[transaction], 0);
+            // ftruncate(file_descriptor[transaction], 0);
 
             break;
         

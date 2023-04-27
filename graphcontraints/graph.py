@@ -116,6 +116,7 @@ def add_open_different_transactions(solver, graph):
 def add_unbounded_no_transaction(solver, graph):
     for node1 in graph.nodes():
         solver.add( z3.Implies( graph.nodes()[node1]['operation_type'] == OperationTypes.UNBOUNDED.value, graph.nodes()[node1]['transaction'] == -1 ) )
+        solver.add( z3.Implies( graph.nodes()[node1]['operation_type'] != OperationTypes.UNBOUNDED.value, graph.nodes()[node1]['transaction'] != -1 ) )
 
 def add_op_after_open(solver, graph):
     for node1 in graph.nodes():
