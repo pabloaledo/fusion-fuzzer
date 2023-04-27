@@ -193,6 +193,7 @@ void initialize_buffers(){
 
 int main(int argc, char* argv[]) {
 
+    srand(1);
     initialize_buffers();
 
     if (argc != 2) {
