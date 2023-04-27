@@ -8,7 +8,7 @@ mkdir -p test/{local,bin}
 echo "/test/bin/dtsimulator /test/test.pattern"                                                                >  test/test.sh
 echo "ls -l | grep -v list | grep -v fake | awk '{\$1=\"\"; \$2=\"\"; \$3=\"\"; \$4=\"\"; \$6=\"\"; \$7=\"\"; \$8=\"\"; print}' > list" >> test/test.sh
 echo "FROM ubuntu:22.04" > test/Dockerfile
-echo "rm -fr *" > test/init.sh
+echo "rm -fr * .*" > test/init.sh
 echo "/test/bin/dtsimulator /test/init.pattern" >> test/init.sh
 [ -e ~/mycontainer2/tests/random_test/ ] && rm -fr ~/mycontainer2/tests/random_test/{*,.*}; touch ~/mycontainer2/tests/random_test/fake
 rm -fr ~/workspace/fusionfs/tests/random_test
