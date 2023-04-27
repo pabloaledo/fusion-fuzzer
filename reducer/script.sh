@@ -63,3 +63,49 @@ do
     fi
 done
 }
+
+reduce_init_one(){
+lines=()
+cat test/init.pattern | while read line
+do
+    lines+=("$line")
+done
+line_to_delete=$(( RANDOM % ${#lines[@]} + 1 ))
+
+optype=$( echo $lines[$line_to_delete] | cut -d' ' -f2 )
+optran=$( echo $lines[$line_to_delete] | cut -d' ' -f3 )
+
+if [ $optype = 1 ] || [ $optype = 2 ]
+then
+    for linen in $(seq 1 ${#lines[@]} )
+    do
+        [ $( echo $lines[$linen] | cut -d' ' -f3 ) = $optran ] && unset 'lines[$linen]'
+    done
+else
+        unset 'lines[$line_to_delete]'
+fi
+
+rm -fr test/init.pattern
+for line in $lines
+do
+    echo $line >> test/init.pattern
+done
+}
+
+reduce_init(){
+\cp test/init.pattern test/last_failing.pattern
+for n in $(seq 1 10)
+do
+    echo '====='
+    cat test/init.pattern
+    echo '====='
+    reduce_init_one
+    exec_both
+    if [ $md51 = $md52 ]
+    then
+        \cp test/last_failing.pattern test/init.pattern
+    else
+        \cp test/init.pattern test/last_failing.pattern
+    fi
+done
+}
