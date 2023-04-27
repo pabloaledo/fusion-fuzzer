@@ -191,7 +191,7 @@ def generate_nodes(n):
     return ret
 
 def likelyhood(model, graph, node):
-    return 1
+    return 80
 
 
 
