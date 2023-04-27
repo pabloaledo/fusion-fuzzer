@@ -24,7 +24,7 @@ cat test/test.pattern | while read line
 do
     lines+=("$line")
 done
-line_to_delete=$(( RANDOM % $(( ${#lines[@]} - 1 )) + 1 ))
+line_to_delete=$(( RANDOM % ${#lines[@]} + 1 ))
 
 optype=$( echo $lines[$line_to_delete] | cut -d' ' -f2 )
 optran=$( echo $lines[$line_to_delete] | cut -d' ' -f3 )
