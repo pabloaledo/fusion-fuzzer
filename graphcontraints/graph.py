@@ -159,6 +159,38 @@ def add_no_double_fds(solver, graph):
             if other_open_time >= open_time and other_open_time <= close_time:
                 solver.add( graph.nodes()[node1]['file_id'] != graph.nodes()[node2]['file_id'] )
 
+def get_close_time(solver, graph, node):
+    open_transaction = solver.model()[ graph.nodes()[node]["transaction"] ].as_long()
+    for node in graph.nodes():
+        optype = solver.model()[ graph.nodes()[node]["operation_type"] ].as_long()
+        transaction = solver.model()[ graph.nodes()[node]["transaction"] ].as_long()
+        if optype == OperationTypes.CLOSE.value and transaction == open_transaction:
+            return solver.model()[ graph.nodes()[node]["time"] ].as_long()
+
+
+def add_no_modify_intransit(solver, graph):
+    for node1 in graph.nodes():
+        my_optype = solver.model()[ graph.nodes()[node1]["operation_type"] ].as_long()
+        my_time = solver.model()[ graph.nodes()[node1]["time"] ].as_long()
+        if my_optype != OperationTypes.UNBOUNDED.value:
+            continue
+
+
+        othernodes = set(graph.adj[node1])
+
+        for node2 in othernodes:
+            other_optype = solver.model()[ graph.nodes()[node2]["operation_type"] ].as_long()
+            if other_optype != OperationTypes.OPEN.value:
+                continue
+
+            other_open_time = solver.model()[ graph.nodes()[node2]["time"] ].as_long()
+            other_close_time = get_close_time(solver, graph, node2)
+
+            if other_open_time <= my_time and other_close_time >= my_time :
+                solver.add( graph.nodes()[node1]['file_id'] != graph.nodes()[node2]['file_id'] )
+                solver.add( graph.nodes()[node1]['file_id'] != graph.nodes()[node2]['file2_id'] )
+
+
 
 def show_solution(model, graph):
     times = set()
@@ -342,6 +374,7 @@ wave_function_collapse_step1(G, solver)
 collapse_optype_time_and_transaction(G, solver)
 
 add_no_double_fds(solver, G)
+add_no_modify_intransit(solver, G)
 
 wave_function_collapse_step2(G, solver)
 
