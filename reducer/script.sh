@@ -50,6 +50,9 @@ reduce(){
 \cp test/test.pattern test/last_failing.pattern
 for n in $(seq 1 10)
 do
+    echo '====='
+    cat test/test.pattern
+    echo '====='
     reduce_one
     exec_both
     if [ $md51 = $md52 ]

@@ -91,7 +91,7 @@ void execute_command(char* command) {
         case 10:
             printf("link %d\n", transaction);
 
-            link(file_names[name_id], file_names[name2_id]);
+            symlink(file_names[name_id], file_names[name2_id]);
 
             break;
 
