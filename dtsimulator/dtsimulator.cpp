@@ -21,7 +21,7 @@ char* file_names[NUM_FILES];
 void execute_command(char* command) {
     printf("Executing command: %s\n", command);
     int operation, transaction, buffer_id, name_id, name2_id, offset, size;
-    sscanf(command, "%d%d%d%d%d", &operation, &transaction, &buffer_id, &name_id, &name2_id, &offset, &size);
+    sscanf(command, "%d%d%d%d%d%d%d", &operation, &transaction, &buffer_id, &name_id, &name2_id, &offset, &size);
 
     switch (operation) {
         case 1:
