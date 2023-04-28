@@ -302,6 +302,8 @@ def wave_function_collapse_step1(graph, solver):
             solver.check()
 
             likely = random.randint(0, 100) < likelyhood(solver.model(), graph, rand_node)
+            if solver.check() != z3.sat:
+                likely = false
 
             if likely:
                 graph.nodes()[rand_node]['collapsed'] = True
@@ -315,7 +317,7 @@ def wave_function_collapse_step2(graph, solver):
         graph.nodes()[node]['collapsed'] = False
 
     collapsed_nodes = 0
-    while collapsed_nodes < 5:
+    while collapsed_nodes < 8:
         rand_node = random.randint(1, len(graph.nodes()))
         if graph.nodes()[rand_node]['collapsed']:
             continue
@@ -329,6 +331,8 @@ def wave_function_collapse_step2(graph, solver):
             solver.check()
 
             likely = random.randint(0, 100) < likelyhood(solver.model(), graph, rand_node)
+            if solver.check() != z3.sat:
+                likely = false
 
             if likely:
                 graph.nodes()[rand_node]['collapsed'] = True
