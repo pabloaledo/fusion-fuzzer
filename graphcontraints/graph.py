@@ -260,8 +260,7 @@ def getandcollapse_step2(graph, solver, rand_node):
 
     solver.check()
     andexpr = z3.And(
-            graph.nodes()[rand_node]['file_id'] == random.randint(0,9),
-            graph.nodes()[rand_node]['file2_id'] == random.randint(0,9),
+            graph.nodes()[rand_node]['buffer_id'] == random.randint(0,10),
             graph.nodes()[rand_node]['offset'] == random.randint(0,10000),
             graph.nodes()[rand_node]['size'] == random.randint(0,100)
     )
@@ -289,7 +288,7 @@ def wave_function_collapse_step1(graph, solver):
         graph.nodes()[node]['collapsed'] = False
 
     collapsed_nodes = 0
-    while collapsed_nodes < 10:
+    while collapsed_nodes < 3:
         rand_node = random.randint(1, len(graph.nodes()))
         if graph.nodes()[rand_node]['collapsed']:
             continue
@@ -316,7 +315,7 @@ def wave_function_collapse_step2(graph, solver):
         graph.nodes()[node]['collapsed'] = False
 
     collapsed_nodes = 0
-    while collapsed_nodes < 10:
+    while collapsed_nodes < 5:
         rand_node = random.randint(1, len(graph.nodes()))
         if graph.nodes()[rand_node]['collapsed']:
             continue
@@ -348,7 +347,7 @@ random.seed(datetime.now().timestamp())
 # create an empty undirected graph
 G = nx.Graph()
 
-num_nodes = 50
+num_nodes = 20
 
 # define the nodes
 nodes = generate_nodes(num_nodes)

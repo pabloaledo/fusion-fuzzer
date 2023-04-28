@@ -1,7 +1,8 @@
 rm -fr test
 mkdir -p test/{local,bin}
-( cd test;  python ../../graphcontraints/graph.py > init.pattern )
+#( cd test;  python ../../graphcontraints/graph.py > init.pattern )
 #truncate -s0 test/init.pattern
+touch test/init.pattern
 ( cd test;  python ../../graphcontraints/graph.py > test.pattern )
 ( cd test/local;  ../../../dtsimulator/dtsimulator ../init.pattern )
 ( cd test/local;  ../../../dtsimulator/dtsimulator ../test.pattern )
