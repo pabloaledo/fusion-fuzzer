@@ -260,9 +260,9 @@ def getandcollapse_step2(graph, solver, rand_node):
 
     solver.check()
     andexpr = z3.And(
-            graph.nodes()[rand_node]['buffer_id'] == random.randint(0,10),
+            graph.nodes()[rand_node]['buffer_id'] == random.randint(0,9),
             graph.nodes()[rand_node]['offset'] == random.randint(0,10000),
-            graph.nodes()[rand_node]['size'] == random.randint(0,100)
+            graph.nodes()[rand_node]['size'] == random.randint(0,99)
     )
     solver.add(andexpr)
     solver.check()
@@ -317,7 +317,7 @@ def wave_function_collapse_step2(graph, solver):
         graph.nodes()[node]['collapsed'] = False
 
     collapsed_nodes = 0
-    while collapsed_nodes < 8:
+    while collapsed_nodes < 10:
         rand_node = random.randint(1, len(graph.nodes()))
         if graph.nodes()[rand_node]['collapsed']:
             continue
