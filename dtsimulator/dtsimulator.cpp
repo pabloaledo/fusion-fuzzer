@@ -20,8 +20,8 @@ char* file_names[NUM_FILES];
 
 void execute_command(char* command) {
     printf("Executing command: %s\n", command);
-    int operation, transaction, buffer_id, name_id, name2_id;
-    sscanf(command, "%d%d%d%d%d", &operation, &transaction, &buffer_id, &name_id, &name2_id);
+    int operation, transaction, buffer_id, name_id, name2_id, offset, size;
+    sscanf(command, "%d%d%d%d%d", &operation, &transaction, &buffer_id, &name_id, &name2_id, &offset, &size);
 
     switch (operation) {
         case 1:
@@ -41,28 +41,28 @@ void execute_command(char* command) {
         case 3:
             printf("write %d\n", transaction);
 
-            write(file_descriptor[transaction], buffer[buffer_id], 100);
+            write(file_descriptor[transaction], buffer[buffer_id], size);
 
             break;
 
         case 4:
             printf("read %d\n", transaction);
 
-            read(file_descriptor[transaction], buffer[buffer_id], 100);
+            read(file_descriptor[transaction], buffer[buffer_id], size);
 
             break;
 
         case 5:
             printf("seek %d\n", transaction);
 
-            lseek(file_descriptor[transaction], 0, SEEK_SET);
+            lseek(file_descriptor[transaction], offset, SEEK_SET);
 
             break;
         
         case 6:
             printf("truncate %d\n", transaction);
 
-            // ftruncate(file_descriptor[transaction], 0);
+            ftruncate(file_descriptor[transaction], offset);
 
             break;
         

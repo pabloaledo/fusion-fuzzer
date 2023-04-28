@@ -53,6 +53,8 @@ def add_operation_constraints(solver, graph):
         solver.add( graph.nodes()[node]['buffer_id'] >= 0, graph.nodes()[node]['buffer_id'] < 10 )
         solver.add( graph.nodes()[node]['file_id'] >= 0, graph.nodes()[node]['file_id'] < 10 )
         solver.add( graph.nodes()[node]['file2_id'] >= 0, graph.nodes()[node]['file2_id'] < 10 )
+        solver.add( graph.nodes()[node]['offset'] >= 0, graph.nodes()[node]['offset'] < 10000 )
+        solver.add( graph.nodes()[node]['size'] >= 0, graph.nodes()[node]['size'] < 100 )
 
 def add_time_constraints(solver, graph):
     for node in graph.nodes():
@@ -191,8 +193,6 @@ def add_no_modify_intransit(solver, graph):
                 solver.add( graph.nodes()[node1]['file_id'] != graph.nodes()[node2]['file_id'] )
                 solver.add( graph.nodes()[node1]['file_id'] != graph.nodes()[node2]['file2_id'] )
 
-
-
 def show_solution(model, graph):
     times = set()
     for node in graph.nodes():
@@ -208,7 +208,9 @@ def show_solution(model, graph):
                 buffer_id = model[ node['buffer_id'] ].as_long()
                 file_id = model[ node['file_id'] ].as_long()
                 file2_id = model[ node['file2_id'] ].as_long()
-                print(time, operation, transaction, buffer_id, file_id, file2_id)
+                offset = model[ node['offset'] ].as_long()
+                size = model[ node['size'] ].as_long()
+                print(time, operation, transaction, buffer_id, file_id, file2_id, offset, size)
 
 def generate_nodes(n):
     ret = list()
@@ -222,15 +224,15 @@ def generate_nodes(n):
                 "transaction": z3.Int("transaction_%04d" % x),
                 "buffer_id": z3.Int("buffer_id_%04d" % x),
                 "file_id": z3.Int("file_id_%04d" % x),
-                "file2_id": z3.Int("file2_id_%04d" % x)
+                "file2_id": z3.Int("file2_id_%04d" % x),
+                "offset": z3.Int("offset_%04d" % x),
+                "size": z3.Int("size_%04d" % x)
                 }
         ret.append(node)
     return ret
 
 def likelyhood(model, graph, node):
     return 80
-
-
 
 def getandcollapse_step1(graph, solver, rand_node):
     solver.push()
@@ -248,10 +250,6 @@ def getandcollapse_step1(graph, solver, rand_node):
             graph.nodes()[rand_node]['time'] == solver.model()[ graph.nodes()[rand_node]["time"] ].as_long(), 
             graph.nodes()[rand_node]['operation_type'] == solver.model()[ graph.nodes()[rand_node]["operation_type"] ].as_long(), 
             graph.nodes()[rand_node]['transaction'] == solver.model()[ graph.nodes()[rand_node]["transaction"] ].as_long(), 
-            # graph.nodes()[rand_node]['operation'] == solver.model()[ graph.nodes()[rand_node]["operation"] ].as_long(), 
-            # graph.nodes()[rand_node]['buffer_id'] == solver.model()[ graph.nodes()[rand_node]["buffer_id"] ].as_long(),
-            # graph.nodes()[rand_node]['file_id'] == solver.model()[ graph.nodes()[rand_node]["file_id"] ].as_long(),
-            # graph.nodes()[rand_node]['file2_id'] == solver.model()[ graph.nodes()[rand_node]["file2_id"] ].as_long()
     )
 
     solver.pop()
@@ -263,7 +261,9 @@ def getandcollapse_step2(graph, solver, rand_node):
     solver.check()
     andexpr = z3.And(
             graph.nodes()[rand_node]['file_id'] == random.randint(0,9),
-            graph.nodes()[rand_node]['file2_id'] == random.randint(0,9)
+            graph.nodes()[rand_node]['file2_id'] == random.randint(0,9),
+            graph.nodes()[rand_node]['offset'] == random.randint(0,10000),
+            graph.nodes()[rand_node]['size'] == random.randint(0,100)
     )
     solver.add(andexpr)
     solver.check()
@@ -275,7 +275,9 @@ def getandcollapse_step2(graph, solver, rand_node):
             graph.nodes()[rand_node]['operation'] == solver.model()[ graph.nodes()[rand_node]["operation"] ].as_long(), 
             graph.nodes()[rand_node]['buffer_id'] == solver.model()[ graph.nodes()[rand_node]["buffer_id"] ].as_long(),
             graph.nodes()[rand_node]['file_id'] == solver.model()[ graph.nodes()[rand_node]["file_id"] ].as_long(),
-            graph.nodes()[rand_node]['file2_id'] == solver.model()[ graph.nodes()[rand_node]["file2_id"] ].as_long()
+            graph.nodes()[rand_node]['file2_id'] == solver.model()[ graph.nodes()[rand_node]["file2_id"] ].as_long(),
+            graph.nodes()[rand_node]['offset'] == solver.model()[ graph.nodes()[rand_node]["offset"] ].as_long(),
+            graph.nodes()[rand_node]['size'] == solver.model()[ graph.nodes()[rand_node]["size"] ].as_long()
     )
 
     solver.pop()
@@ -283,8 +285,11 @@ def getandcollapse_step2(graph, solver, rand_node):
 
 def wave_function_collapse_step1(graph, solver):
 
+    for node in graph.nodes():
+        graph.nodes()[node]['collapsed'] = False
+
     collapsed_nodes = 0
-    while collapsed_nodes < 3:
+    while collapsed_nodes < 10:
         rand_node = random.randint(1, len(graph.nodes()))
         if graph.nodes()[rand_node]['collapsed']:
             continue
@@ -307,8 +312,11 @@ def wave_function_collapse_step1(graph, solver):
 
 def wave_function_collapse_step2(graph, solver):
 
+    for node in graph.nodes():
+        graph.nodes()[node]['collapsed'] = False
+
     collapsed_nodes = 0
-    while collapsed_nodes < 3:
+    while collapsed_nodes < 10:
         rand_node = random.randint(1, len(graph.nodes()))
         if graph.nodes()[rand_node]['collapsed']:
             continue
@@ -335,15 +343,12 @@ def collapse_optype_time_and_transaction(graph, solver):
         solver.add( graph.nodes()[node]['time'] == solver.model()[ graph.nodes()[node]["time"] ].as_long() )
         solver.add( graph.nodes()[node]['transaction'] == solver.model()[ graph.nodes()[node]["transaction"] ].as_long() )
 
-
-
-#random.seed(100)
 random.seed(datetime.now().timestamp())
 
 # create an empty undirected graph
 G = nx.Graph()
 
-num_nodes = 10
+num_nodes = 50
 
 # define the nodes
 nodes = generate_nodes(num_nodes)
