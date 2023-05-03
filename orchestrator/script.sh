@@ -1,6 +1,6 @@
 rm -fr test
 mkdir -p test/{local,bin}
-( cd test;  python ../../graphcontraints/graph.py > both.pattern )
+( cd test; timeout 10s python ../../graphcontraints/graph.py > both.pattern )
 ( cd test;  cat both.pattern | awk '$1 == -1{print}' > init.pattern )
 ( cd test;  cat both.pattern | awk '$1 != -1{print}' > test.pattern)
 ( cd test/local;  ../../../dtsimulator/dtsimulator ../init.pattern )
