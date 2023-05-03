@@ -140,6 +140,32 @@ def add_op_before_close(solver, graph):
         for node2 in othernodes:
             solver.add( z3.Implies( z3.And( graph.nodes()[node1]['operation_type'] == OperationTypes.BOUNDED.value, graph.nodes()[node2]['operation_type'] == OperationTypes.CLOSE.value, graph.nodes()[node1]['transaction'] == graph.nodes()[node2]['transaction'] ) , graph.nodes()[node1]['time'] < graph.nodes()[node2]['time'] ) )
 
+def get_open_node(solver, graph, node):
+    transaction = solver.model()[ graph.nodes()[node]["transaction"] ].as_long()
+    for node in graph.nodes():
+        optype = solver.model()[ graph.nodes()[node]["operation_type"] ].as_long()
+        open_transaction = solver.model()[ graph.nodes()[node]["transaction"] ].as_long()
+        if optype == OperationTypes.OPEN.value and transaction == open_transaction:
+            return node
+
+def add_no_write_existing(solver, graph):
+    inits = set()
+    for node1 in graph.nodes():
+        my_optype = solver.model()[ graph.nodes()[node1]["operation_type"] ].as_long()
+        if my_optype != OperationTypes.INIT.value:
+            continue
+        inits.add(node1)
+
+    for node1 in graph.nodes():
+        my_optype = solver.model()[ graph.nodes()[node1]["operation_type"] ].as_long()
+        if my_optype != Operations.WRITE.value:
+            continue
+
+        my_open = get_open_node(solver, graph, node1)
+
+        for node2 in inits:
+            solver.add( graph.nodes()[my_open]['file_id'] != graph.nodes()[node2]['file_id'] )
+
 def add_init_different_files(solver, graph):
     inits = set()
     for node1 in graph.nodes():
@@ -404,6 +430,7 @@ add_unbounded_no_transaction(solver, G)
 wave_function_collapse_step1(G, solver)
 collapse_optype_time_and_transaction(G, solver)
 
+add_no_write_existing(solver, G)
 add_init_different_files(solver, G)
 add_no_double_fds(solver, G)
 add_no_modify_intransit(solver, G)
