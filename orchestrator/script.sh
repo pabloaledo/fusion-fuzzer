@@ -1,9 +1,8 @@
 rm -fr test
 mkdir -p test/{local,bin}
-#( cd test;  python ../../graphcontraints/graph.py > init.pattern )
-#truncate -s0 test/init.pattern
-touch test/init.pattern
-( cd test;  python ../../graphcontraints/graph.py > test.pattern )
+( cd test;  python ../../graphcontraints/graph.py > both.pattern )
+( cd test;  cat both.pattern | awk '$1 == -1{print}' > init.pattern )
+( cd test;  cat both.pattern | awk '$1 != -1{print}' > test.pattern)
 ( cd test/local;  ../../../dtsimulator/dtsimulator ../init.pattern )
 ( cd test/local;  ../../../dtsimulator/dtsimulator ../test.pattern )
 ( cd test/local; ls -l | grep -v list | grep -v md5s | awk '{$1=""; $2=""; $3=""; $4=""; $6=""; $7=""; $8=""; print}' > list )

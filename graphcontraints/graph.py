@@ -15,8 +15,10 @@ class OperationTypes(Enum):
     BOUNDED = 2
     CLOSE = 3
     UNBOUNDED = 4
+    INIT = 5
 
 class Operations(Enum):
+    INIT = 0
     OPEN = 1
     CLOSE = 2
     WRITE = 3
@@ -40,6 +42,7 @@ class Operations(Enum):
 
 def add_operations_from_types(solver, graph):
     for node in graph.nodes():
+        solver.add( z3.Implies( graph.nodes()[node]['operation_type'] == OperationTypes.INIT.value, graph.nodes()[node]['operation'] == Operations.INIT.value ) )
         solver.add( z3.Implies( graph.nodes()[node]['operation_type'] == OperationTypes.OPEN.value, graph.nodes()[node]['operation'] == Operations.OPEN.value ) )
         solver.add( z3.Implies( graph.nodes()[node]['operation_type'] == OperationTypes.CLOSE.value, graph.nodes()[node]['operation'] == Operations.CLOSE.value ) )
         solver.add( z3.Implies( graph.nodes()[node]['operation_type'] == OperationTypes.BOUNDED.value, z3.And(graph.nodes()[node]['operation'] >= Operations.WRITE.value, graph.nodes()[node]['operation'] <= Operations.SYNC.value ) ) )
@@ -47,8 +50,8 @@ def add_operations_from_types(solver, graph):
 
 def add_operation_constraints(solver, graph):
     for node in graph.nodes():
-        solver.add( graph.nodes()[node]['operation_type'] >= OperationTypes.OPEN.value, graph.nodes()[node]['operation_type'] <= OperationTypes.UNBOUNDED.value )
-        solver.add( graph.nodes()[node]['operation'] >= Operations.OPEN.value, graph.nodes()[node]['operation'] <= Operations.ACCESS.value )
+        solver.add( graph.nodes()[node]['operation_type'] >= OperationTypes.OPEN.value, graph.nodes()[node]['operation_type'] <= OperationTypes.INIT.value )
+        solver.add( graph.nodes()[node]['operation'] >= Operations.INIT.value, graph.nodes()[node]['operation'] <= Operations.ACCESS.value )
         solver.add( graph.nodes()[node]['transaction'] >= -1, graph.nodes()[node]['transaction'] <= 100 )
         solver.add( graph.nodes()[node]['buffer_id'] >= 0, graph.nodes()[node]['buffer_id'] < 10 )
         solver.add( graph.nodes()[node]['file_id'] >= 0, graph.nodes()[node]['file_id'] < 10 )
@@ -58,7 +61,7 @@ def add_operation_constraints(solver, graph):
 
 def add_time_constraints(solver, graph):
     for node in graph.nodes():
-        solver.add( graph.nodes()[node]['time'] >= 0, graph.nodes()[node]['time'] <= 10000 )
+        solver.add( graph.nodes()[node]['time'] >= -1, graph.nodes()[node]['time'] <= 10000 )
 
 def add_if_open_then_close(solver, graph):
    for node1 in graph.nodes():
@@ -120,6 +123,11 @@ def add_unbounded_no_transaction(solver, graph):
         solver.add( z3.Implies( graph.nodes()[node1]['operation_type'] == OperationTypes.UNBOUNDED.value, graph.nodes()[node1]['transaction'] == -1 ) )
         solver.add( z3.Implies( graph.nodes()[node1]['operation_type'] != OperationTypes.UNBOUNDED.value, graph.nodes()[node1]['transaction'] != -1 ) )
 
+def add_init_constraints(solver, graph):
+    for node1 in graph.nodes():
+        solver.add( z3.Implies( graph.nodes()[node1]['operation_type'] == OperationTypes.INIT.value, graph.nodes()[node1]['time'] == -1 ) )
+        solver.add( z3.Implies( graph.nodes()[node1]['operation_type'] != OperationTypes.INIT.value, graph.nodes()[node1]['time'] != -1 ) )
+
 def add_op_after_open(solver, graph):
     for node1 in graph.nodes():
         othernodes = set(graph.adj[node1])
@@ -131,6 +139,19 @@ def add_op_before_close(solver, graph):
         othernodes = set(graph.adj[node1])
         for node2 in othernodes:
             solver.add( z3.Implies( z3.And( graph.nodes()[node1]['operation_type'] == OperationTypes.BOUNDED.value, graph.nodes()[node2]['operation_type'] == OperationTypes.CLOSE.value, graph.nodes()[node1]['transaction'] == graph.nodes()[node2]['transaction'] ) , graph.nodes()[node1]['time'] < graph.nodes()[node2]['time'] ) )
+
+def add_init_different_files(solver, graph):
+    inits = set()
+    for node1 in graph.nodes():
+        my_optype = solver.model()[ graph.nodes()[node1]["operation_type"] ].as_long()
+        if my_optype != OperationTypes.INIT.value:
+            continue
+        inits.add(node1)
+
+    for node1 in inits:
+        for node2 in inits:
+            if node1 != node2:
+                solver.add( graph.nodes()[node1]['file_id'] != graph.nodes()[node2]['file_id'] )
 
 def add_no_double_fds(solver, graph):
     for node1 in graph.nodes():
@@ -239,7 +260,7 @@ def getandcollapse_step1(graph, solver, rand_node):
 
     solver.check()
     andexpr = z3.And(
-            graph.nodes()[rand_node]['operation'] == random.randint(1,20),
+            graph.nodes()[rand_node]['operation'] == random.randint(0,20),
             graph.nodes()[rand_node]['file_id'] == random.randint(0,9),
             graph.nodes()[rand_node]['file2_id'] == random.randint(0,9)
     )
@@ -377,11 +398,13 @@ add_close_after_open(solver, G)
 add_op_after_open(solver, G)
 add_op_before_close(solver, G)
 add_open_different_transactions(solver, G)
+add_init_constraints(solver, G)
 add_unbounded_no_transaction(solver, G)
 
 wave_function_collapse_step1(G, solver)
 collapse_optype_time_and_transaction(G, solver)
 
+add_init_different_files(solver, G)
 add_no_double_fds(solver, G)
 add_no_modify_intransit(solver, G)
 

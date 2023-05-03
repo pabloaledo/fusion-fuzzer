@@ -20,10 +20,18 @@ char* file_names[NUM_FILES];
 
 void execute_command(char* command) {
     printf("Executing command: %s\n", command);
-    int operation, transaction, buffer_id, name_id, name2_id, offset, size;
+    int operation, transaction, buffer_id, name_id, name2_id, offset, size, fd;
     sscanf(command, "%d%d%d%d%d%d%d", &operation, &transaction, &buffer_id, &name_id, &name2_id, &offset, &size);
 
     switch (operation) {
+        case 0:
+            printf("init %d\n", transaction);
+
+            fd = open(file_names[name_id], O_RDWR | O_CREAT, 0666);
+            ftruncate(fd, offset);
+            close(fd);
+
+            break;
         case 1:
             printf("open %d\n", transaction);
 
