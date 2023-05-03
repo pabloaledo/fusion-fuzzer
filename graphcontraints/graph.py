@@ -157,8 +157,8 @@ def add_no_write_existing(solver, graph):
         inits.add(node1)
 
     for node1 in graph.nodes():
-        my_optype = solver.model()[ graph.nodes()[node1]["operation_type"] ].as_long()
-        if my_optype != Operations.WRITE.value:
+        my_op = solver.model()[ graph.nodes()[node1]["operation"] ].as_long()
+        if my_op != Operations.WRITE.value:
             continue
 
         my_open = get_open_node(solver, graph, node1)
@@ -413,6 +413,12 @@ for i in range(0, num_nodes):
 
 # Create a solver
 solver = z3.Solver()
+
+#solver.add( G.nodes()[1]['operation'] == Operations.TRUNCATE.value )
+#solver.add( G.nodes()[2]['operation'] == Operations.OPEN.value )
+#solver.add( G.nodes()[3]['operation'] == Operations.CLOSE.value )
+#solver.add( G.nodes()[4]['operation'] == Operations.INIT.value )
+#solver.add( G.nodes()[4]['offset'] == 100 )
 
 add_operations_from_types(solver, G)
 add_operation_constraints(solver, G)
