@@ -303,6 +303,7 @@ def getandcollapse_step1(graph, solver, rand_node):
     )
     solver.add(andexpr)
     solver.check()
+    model = solver.model()
 
     andexpr = z3.And(
             graph.nodes()[rand_node]['time'] == model[ graph.nodes()[rand_node]["time"] ].as_long(), 
@@ -320,13 +321,27 @@ def getandcollapse_step2(graph, solver, rand_node):
     solver.push()
 
     solver.check()
+    model = solver.model()
     andexpr = z3.And(
             graph.nodes()[rand_node]['buffer_id'] == random.randint(0,9),
             graph.nodes()[rand_node]['offset'] == random.randint(0,10000),
             graph.nodes()[rand_node]['size'] == random.randint(0,99)
     )
+
+    if model[ graph.nodes()[rand_node]["operation_type"] ].as_long() == OperationTypes.INIT.value:
+        andexpr = z3.And(andexpr, graph.nodes()[rand_node]['operation'] == Operations.INIT.value )
+    if model[ graph.nodes()[rand_node]["operation_type"] ].as_long() == OperationTypes.OPEN.value:
+        andexpr = z3.And(andexpr, graph.nodes()[rand_node]['operation'] == Operations.OPEN.value )
+    if model[ graph.nodes()[rand_node]["operation_type"] ].as_long() == OperationTypes.CLOSE.value:
+        andexpr = z3.And(andexpr, graph.nodes()[rand_node]['operation'] == Operations.CLOSE.value )
+    if model[ graph.nodes()[rand_node]["operation_type"] ].as_long() == OperationTypes.BOUNDED.value:
+        andexpr = z3.And(andexpr, graph.nodes()[rand_node]['operation'] == random.randint(Operations.WRITE.value, Operations.SYNC.value) )
+    if model[ graph.nodes()[rand_node]["operation_type"] ].as_long() == OperationTypes.UNBOUNDED.value:
+        andexpr = z3.And(andexpr, graph.nodes()[rand_node]['operation'] == random.randint(Operations.DELETE.value, Operations.ACCESS.value) )
+
     solver.add(andexpr)
     solver.check()
+    model = solver.model()
 
     andexpr = z3.And(
             graph.nodes()[rand_node]['time'] == model[ graph.nodes()[rand_node]["time"] ].as_long(), 
@@ -349,7 +364,7 @@ def wave_function_collapse_step1(graph, solver):
         graph.nodes()[node]['collapsed'] = False
 
     collapsed_nodes = 0
-    while collapsed_nodes < 3:
+    while collapsed_nodes < 10:
         rand_node = random.randint(1, len(graph.nodes()))
         if graph.nodes()[rand_node]['collapsed']:
             continue
@@ -414,7 +429,7 @@ random.seed(datetime.now().timestamp())
 # create an empty undirected graph
 G = nx.Graph()
 
-num_nodes = 20
+num_nodes = 15
 
 # define the nodes
 nodes = generate_nodes(num_nodes)
