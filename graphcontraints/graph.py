@@ -160,7 +160,7 @@ def add_no_write_existing(solver, graph):
 
     for node1 in graph.nodes():
         my_op = model[ graph.nodes()[node1]["operation"] ].as_long()
-        if my_op != Operations.WRITE.value:
+        if my_op != Operations.WRITE.value and my_op != Operations.TRUNCATE.value:
             continue
 
         my_open = get_open_node(solver, graph, node1)
@@ -305,9 +305,21 @@ def getandcollapse_step1(graph, solver, rand_node):
     solver.check()
     model = solver.model()
 
+    if model[ graph.nodes()[rand_node]["operation_type"] ].as_long() == OperationTypes.INIT.value:
+        andexpr = z3.And(andexpr, graph.nodes()[rand_node]['operation'] == Operations.INIT.value )
+    if model[ graph.nodes()[rand_node]["operation_type"] ].as_long() == OperationTypes.OPEN.value:
+        andexpr = z3.And(andexpr, graph.nodes()[rand_node]['operation'] == Operations.OPEN.value )
+    if model[ graph.nodes()[rand_node]["operation_type"] ].as_long() == OperationTypes.CLOSE.value:
+        andexpr = z3.And(andexpr, graph.nodes()[rand_node]['operation'] == Operations.CLOSE.value )
+    if model[ graph.nodes()[rand_node]["operation_type"] ].as_long() == OperationTypes.BOUNDED.value:
+        andexpr = z3.And(andexpr, graph.nodes()[rand_node]['operation'] == random.randint(Operations.WRITE.value, Operations.SYNC.value) )
+    if model[ graph.nodes()[rand_node]["operation_type"] ].as_long() == OperationTypes.UNBOUNDED.value:
+        andexpr = z3.And(andexpr, graph.nodes()[rand_node]['operation'] == random.randint(Operations.DELETE.value, Operations.ACCESS.value) )
+
     andexpr = z3.And(
             graph.nodes()[rand_node]['time'] == model[ graph.nodes()[rand_node]["time"] ].as_long(), 
             graph.nodes()[rand_node]['operation_type'] == model[ graph.nodes()[rand_node]["operation_type"] ].as_long(), 
+            graph.nodes()[rand_node]['operation'] == model[ graph.nodes()[rand_node]["operation"] ].as_long(), 
             graph.nodes()[rand_node]['transaction'] == model[ graph.nodes()[rand_node]["transaction"] ].as_long(), 
     )
 
@@ -327,17 +339,6 @@ def getandcollapse_step2(graph, solver, rand_node):
             graph.nodes()[rand_node]['offset'] == random.randint(0,10000),
             graph.nodes()[rand_node]['size'] == random.randint(0,99)
     )
-
-    if model[ graph.nodes()[rand_node]["operation_type"] ].as_long() == OperationTypes.INIT.value:
-        andexpr = z3.And(andexpr, graph.nodes()[rand_node]['operation'] == Operations.INIT.value )
-    if model[ graph.nodes()[rand_node]["operation_type"] ].as_long() == OperationTypes.OPEN.value:
-        andexpr = z3.And(andexpr, graph.nodes()[rand_node]['operation'] == Operations.OPEN.value )
-    if model[ graph.nodes()[rand_node]["operation_type"] ].as_long() == OperationTypes.CLOSE.value:
-        andexpr = z3.And(andexpr, graph.nodes()[rand_node]['operation'] == Operations.CLOSE.value )
-    if model[ graph.nodes()[rand_node]["operation_type"] ].as_long() == OperationTypes.BOUNDED.value:
-        andexpr = z3.And(andexpr, graph.nodes()[rand_node]['operation'] == random.randint(Operations.WRITE.value, Operations.SYNC.value) )
-    if model[ graph.nodes()[rand_node]["operation_type"] ].as_long() == OperationTypes.UNBOUNDED.value:
-        andexpr = z3.And(andexpr, graph.nodes()[rand_node]['operation'] == random.randint(Operations.DELETE.value, Operations.ACCESS.value) )
 
     solver.add(andexpr)
     solver.check()
@@ -421,6 +422,7 @@ def collapse_optype_time_and_transaction(graph, solver):
     model = solver.model()
     for node in graph.nodes():
         solver.add( graph.nodes()[node]['operation_type'] == model[ graph.nodes()[node]["operation_type"] ].as_long() )
+        solver.add( graph.nodes()[node]['operation'] == model[ graph.nodes()[node]["operation"] ].as_long() )
         solver.add( graph.nodes()[node]['time'] == model[ graph.nodes()[node]["time"] ].as_long() )
         solver.add( graph.nodes()[node]['transaction'] == model[ graph.nodes()[node]["transaction"] ].as_long() )
 
