@@ -36,3 +36,6 @@ then
 
     ( cat test/both.pattern; echo ) >> all.patterns
 fi
+
+[ -e /tmp/pause ] && echo "\e[31m ===== pause =====\e[0m"
+while [ -e /tmp/pause ] ; do sleep 10; done
