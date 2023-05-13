@@ -247,7 +247,7 @@ def add_no_modify_intransit(solver, graph):
 
             if other_open_time <= my_time and other_close_time >= my_time :
                 solver.add( graph.nodes()[node1]['file_id'] != graph.nodes()[node2]['file_id'] )
-                solver.add( graph.nodes()[node1]['file_id'] != graph.nodes()[node2]['file2_id'] )
+                solver.add( graph.nodes()[node1]['file2_id'] != graph.nodes()[node2]['file_id'] )
 
 def show_solution(model, graph):
     times = set()
