@@ -1,10 +1,12 @@
 rm -fr test
 mkdir -p test/{local,bin}
-( cd test; timeout 10s python ../../graphcontraints/graph.py | tee both.pattern )
+echo "generating"
+( cd test; timeout 25s python ../../graphcontraints/graph.py | tee both.pattern )
 if [ $(cat test/both.pattern | wc -l) -gt 0 ]
 then
     ( cd test;  cat both.pattern | awk '$1 == -1{print}' > init.pattern )
     ( cd test;  cat both.pattern | awk '$1 != -1{print}' > test.pattern)
+    echo "run local"
     ( cd test/local;  ../../../dtsimulator/dtsimulator ../init.pattern )
     ( cd test/local;  ../../../dtsimulator/dtsimulator ../test.pattern )
     ( cd test/local; ls -l | grep -v list | grep -v md5s | awk '{$1=""; $2=""; $3=""; $4=""; $6=""; $7=""; $8=""; print}' > list )
@@ -21,6 +23,7 @@ then
     export AWS_S3_ENDPOINT=http://172.17.0.2:9000
     export AWS_ACCESS_KEY_ID=minioadmin
     export AWS_SECRET_ACCESS_KEY=minioadmin
+    echo "run fusion"
     (cd ~/workspace/fusionfs/tests; ./run_tests.sh --store=s3 --bucket=fusionfs-ci random_test)
     (cd ~/workspace/fusionfs/tests/random_test/external_docker_folder; md5sum * > md5s)
     md51=$(md5sum ~/workspace/fusionfs/tests/random_test/local/md5s | awk '{print $1}')
