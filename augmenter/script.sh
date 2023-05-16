@@ -9,11 +9,13 @@ add_one(){
 }
 
 augment(){
+    x_rep=$1
+    y_rep=$2
     add_one 0 1 0 > /tmp/augment_out
-    for i in $(seq 1 $1)
+    for i in $(seq 1 $x_rep)
     do
         time_offset=$(( $(cat /tmp/augment_out | cut -d' ' -f1 | sort -g | tail -n1) + 1 ))
-        for j in $(seq 1 $2)
+        for j in $(seq 1 $y_rep)
         do
             time_scale=$(( $RANDOM % 5 ))
             file_offset=$(( $j * 10 + 1 ))
