@@ -1,8 +1,8 @@
 add_one(){
-    time_offset=$1
-    time_scale=$2
-    file_offset=$3
-    selection=$(( $RANDOM % 1000 ))
+    local time_offset=$1
+    local time_scale=$2
+    local file_offset=$3
+    local selection=$(( $RANDOM % 1000 ))
     head -n20000 all.patterns | grep -v '^-1' |\
         awk -v selection=$selection -v time_scale=$time_scale -v time_offset=$time_offset -v file_offset=$file_offset \
         'BEGIN{count=0} /^$/{count++; next} count==selection{$1=$1*time_scale + time_offset; $3=$3+file_offset; $4=$4+file_offset; $5=$5+file_offset; $6=$6+file_offset; print}'

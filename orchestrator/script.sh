@@ -2,7 +2,7 @@ rm -fr test
 mkdir -p test/{local,bin}
 echo "generating"
 #( cd test; timeout 25s python ../../graphcontraints/graph.py | tee both.pattern )
-( source ../augmenter/script.sh; augment 10 10 | tee test/both.pattern )
+( source ../augmenter/script.sh; augment 50 10 | tee test/both.pattern )
 if [ $(cat test/both.pattern | wc -l) -gt 0 ]
 then
     ( cd test;  cat both.pattern | awk '$1 == -1{print}' > init.pattern )
