@@ -63,4 +63,4 @@ More tools outside the basic ones
 Example of execution, debug and fix
 ===================================
 
-
+<img src="./static/graph.svg">
