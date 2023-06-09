@@ -63,4 +63,84 @@ More tools outside the basic ones
 Example of execution, debug and fix
 ===================================
 
+The following is an example of a bug found with fusion-fuzzer. The program is
+started with:
+
+```
+cd orchestrator
+while true; do ./script.sh; done
+```
+
+After a few hours, console shows `RESULTS DIFFER`. If the system is configured
+correctly, an email is sent with the testcase, which is also uploaded to a
+server. This is the only information needed to fully reproduce the bug.
+
+The pattern can be similar to the following snippet:
+
+```
+-1 0  2 9 2 0    0 28
+-1 0  2 9 3 0 4254 42
+-1 0  3 4 5 0 5324 32
+ 0 1  0 6 1 3 1341 31
+ 1 3  0 4 0 0 2946 51
+ 1 9 -1 0 2 1 5675 92
+ 2 2  0 5 0 0 2127 29
+ 3 9 -1 0 1 2 5675 92
+ 4 9 -1 0 2 3 5675 92
+```
+
+Per se, the file is complex to undestand among other things because it contains
+many operations that are not related to the bug.
+
+Calling the reducer, the file is pruned one operation at a time, while checking
+that the test still fails. In case the elimination of an operation makes the
+test not to fail, the removal is backtracked, and the reducer tries to
+eliminate another one. The result of this step is a minimal reproducible
+pattern that looks like the following:
+
+```
+-1 0  2 9 2 0    0 28
+ 3 9 -1 0 1 2 5675 92
+ 4 9 -1 0 2 3 5675 92
+```
+
+The interpretation of the pattern is as follows:
+
+```
+-1 0  2 9 2 0    0 28 # file_2 is initialized before the execution of fusion with a size of 0
+ 1 1 -1 0 1 5 5675 92 # open file_1
+ 2 3 -1 0 1 3 5675 92 # close file_1 without having written anything
+ 3 9 -1 0 1 2 5675 92 # move file_1 to file_2
+ 4 9 -1 0 2 3 5675 92 # move file_2 to file_3
+```
+
+The result of the execution can be tested as many times as wanted with `./reexecute`
+
+The understanding of the previous pattern can be transformed in the following test-case:
+
+```
+init.sh:
+    touch file_2
+test.sh
+    touch file_1
+    mv file_1 file_2
+    mv file_2 file_3
+```
+
+that for the moment needs to be created by hand, but can also be automated from
+the interpretation of the pattern.
+
+The reducer step can also generate a graph like the following (experimental):
+
 <img src="./static/graph.svg">
+
+
+In this graph, the nodes in red indicate functions that are executed in the
+failing test, but not in the passing one, green indicate functions that are
+executed in the passing test but not in the failing one, and yellow means
+functions that are executed in both but whose logs are different. Interpreting
+this graph with the previous information makes us realize that in the case of
+empty files (createEmptyEntry), creating them at shutDown instead of when
+inserting an entry is producing wrong results. This motivates the fix that
+treats empty files similar to regular files, leading to a more robust
+filesystem and fixing the bug :).
